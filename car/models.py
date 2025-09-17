@@ -1,75 +1,47 @@
 from django.db import models
 
-CONDITION_CHOICES = [
-    ('new', 'Новый'),
-    ('used', 'Б/У'),
-]
+class Condition(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    def __str__(self): return self.name
 
-COLOR_CHOICES = [
-    ('white', 'Белый'),
-    ('black', 'Черный'),
-    ('gray', 'Серый'),
-    ('silver', 'Серебристый'),
-    ('blue', 'Синий'),
-    ('red', 'Красный'),
-    ('green', 'Зеленый'),
-    ('yellow', 'Желтый'),
-    ('brown', 'Коричневый'),
-    ('orange', 'Оранжевый'),
-    ('purple', 'Фиолетовый'),
-    ('gold', 'Золотой'),
-]
+class Color(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    def __str__(self): return self.name
 
-BODY_CHOICES = [
-    ('sedan', 'Седан'),
-    ('hatchback', 'Хэтчбек'),
-    ('wagon', 'Универсал'),
-    ('suv', 'Внедорожник (SUV)'),
-    ('crossover', 'Кроссовер'),
-    ('coupe', 'Купе'),
-    ('convertible', 'Кабриолет'),
-    ('pickup', 'Пикап'),
-    ('minivan', 'Минивэн'),
-]
+class BodyType(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    def __str__(self): return self.name
 
-FUEL_CHOICES = [
-    ('petrol', 'Бензин'),
-    ('diesel', 'Дизель'),
-    ('electric', 'Электро'),
-    ('hybrid', 'Гибрид'),
-    ('gas', 'Газ'),
-]
+class FuelType(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    def __str__(self): return self.name
 
-PRICE_CHOICES = [
-    ('5000-10000', '5000$ - 10000$'),
-    ('10000-15000', '10000$ - 15000$'),
-    ('15000-20000', '15000$ - 20000$'),
-    ('20000-25000', '20000$ - 25000$'),
-    ('25000-30000', '25000$ - 30000$'),
-    ('30000-35000', '30000$ - 35000$'),
-    ('35000-40000', '35000$ - 40000$'),
-    ('40000-45000', '40000$ - 45000$'),
-    ('45000-50000', '45000$ - 50000$'),
-    ('50000-60000', '50000$ - 60000$'),
-]
-
+class PriceRange(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    def __str__(self): return self.name
 
 class CarContent(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES)
-    color = models.CharField(max_length=10, choices=COLOR_CHOICES)
-    body_type = models.CharField(max_length=15, choices=BODY_CHOICES)
-    fuel_type = models.CharField(max_length=10, choices=FUEL_CHOICES)
-    price_range = models.CharField(max_length=15, choices=PRICE_CHOICES)
 
+    condition = models.ForeignKey(Condition, on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.CASCADE)
+    body_type = models.ForeignKey(BodyType, on_delete=models.CASCADE)
+    fuel_type = models.ForeignKey(FuelType, on_delete=models.CASCADE)
+    price_range = models.ForeignKey(PriceRange, on_delete=models.CASCADE)
+
+    # фото
+    photo1 = models.ImageField(upload_to="cars/photos/", blank=True, null=True)
+    photo2 = models.ImageField(upload_to="cars/photos/", blank=True, null=True)
+    photo3 = models.ImageField(upload_to="cars/photos/", blank=True, null=True)
+    photo4 = models.ImageField(upload_to="cars/photos/", blank=True, null=True)
+    photo5 = models.ImageField(upload_to="cars/photos/", blank=True, null=True)
+
+    # видео
     video = models.FileField(upload_to="cars/videos/", blank=True, null=True)
-    photo1 = models.ImageField(upload_to="cars/photos1/", blank=True, null=True)
-    photo2 = models.ImageField(upload_to="cars/photos2/", blank=True, null=True)
-    photo3 = models.ImageField(upload_to="cars/photos3/", blank=True, null=True)
-    photo4 = models.ImageField(upload_to="cars/photos4/", blank=True, null=True)
-    photo5 = models.ImageField(upload_to="cars/photos5/", blank=True, null=True)
-    user = models.CharField(max_length=20, blank=True, null=True)
+
+    # владелец
+    owner_username = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.title} ({self.get_condition_display()}, {self.get_price_range_display()})"
+        return f"{self.title} ({self.condition}, {self.price_range})"
