@@ -29,15 +29,16 @@ def orm_get_by_name(model, name: str):
 
 @sync_to_async
 def orm_find_cars(choices: dict):
+    """
+    Фильтрация только по цене.
+    Остальные параметры (состояние, цвет, кузов, топливо) сохраняются,
+    но в запросе не участвуют.
+    """
     return list(
         CarContent.objects.select_related(
             "condition", "color", "body_type", "fuel_type", "price_range"
         ).filter(
-            condition=choices["condition"],
-            color=choices["color"],
-            body_type=choices["body_type"],
-            fuel_type=choices["fuel_type"],
-            price_range=choices["price_range"],
+            price_range=choices["price_range"]
         )
     )
 
@@ -81,6 +82,7 @@ async def cancel(message: types.Message):
         reply_markup=ReplyKeyboardRemove(),
     )
 
+
 async def handle_choice(message: types.Message):
     user_id = message.from_user.id
     text = (message.text or "").strip()
@@ -109,9 +111,9 @@ async def handle_choice(message: types.Message):
     # ==== Поиск авто ====
     cars = await orm_find_cars(user_choices[user_id])
     if not cars:
-        await message.answer("🚘 Машин с такими параметрами пока нет.", reply_markup=ReplyKeyboardRemove())
+        await message.answer("🚘 Машин с таким ценовым диапазоном пока нет.", reply_markup=ReplyKeyboardRemove())
     else:
-        for car in cars:
+        for idx, car in enumerate(cars, start=1):
             # ---- Фото ----
             photos = [getattr(car, f"photo{i}") for i in range(1, 6) if getattr(car, f"photo{i}")]
             try:
@@ -129,7 +131,8 @@ async def handle_choice(message: types.Message):
 
             # ---- Текст ----
             text_info = (
-                f"🚘 {car.title}\n"
+                f"🚘 Машина {idx} из {len(cars)}\n\n"
+                f"{car.title}\n"
                 f"{car.description or 'Без описания'}\n"
                 f"💰 Цена: {car.price_range}\n"
                 f"⚙️ Кузов: {car.body_type}\n"
