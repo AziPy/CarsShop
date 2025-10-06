@@ -1,31 +1,33 @@
 import os
 import sys
 import django
+import asyncio
+from decouple import config
+from aiogram import Bot, Dispatcher
 
-# --- Гарантируем, что корень проекта в sys.path ---
+# --- Настройка пути ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 
-# --- Указываем Django, где искать настройки ---
+# --- Настройка Django ---
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
-django.setup()
+django.setup()  # <- обязательно до любых импортов моделей!
 
-# --- Теперь можно тянуть всё остальное ---
-from aiogram import Bot, Dispatcher
-from decouple import config
-from bot.handlers_user import register_user_handlers
+# Импортируем router, а не register_user_handlers!
+from bot.handlers_user import router
 
-
-# --- Читаем токен из .env ---
+# --- Telegram token ---
 TOKEN = config("TELEGRAM_TOKEN")
 
-# --- Создаём бота и диспетчер ---
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+async def main():
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
 
-# --- Регистрируем хендлеры ---
-register_user_handlers(dp)
+    # ✅ Подключаем router
+    dp.include_router(router)
+
+    print("🤖 Бот запущен и слушает команды...")
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    from aiogram import executor
-    executor.start_polling(dp, skip_updates=True)
+    asyncio.run(main())
